@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+
+  enclosures Enclosure[] @relation("CaretakerEnclosures")
+  walks      Walk[]
+  consents   Consent[]
+
+  @@map("users")
+}
+
+model Enclosure {
+  id          String   @id @default(uuid())
+  name        String
+  photoUrl    String?
+  groupName   String?
+  comment     String?
+  caretakerId String?
+  caretaker   User?    @relation("CaretakerEnclosures", fields: [caretakerId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  dogs  Dog[]
+  walks Walk[]
+
+  @@map("enclosures")
+}
+
+model Dog {
+  id          String    @id @default(uuid())
+  enclosureId String
+  enclosure   Enclosure @relation(fields: [enclosureId], references: [id], onDelete: Cascade)
+  name        String
+  photoUrl    String?
+
+  @@map("dogs")
+}
+
+model Walk {
+  id          String    @id @default(uuid())
+  enclosureId String
+  enclosure   Enclosure @relation(fields: [enclosureId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  walkedAt    DateTime  @default(now())
+
+  @@map("walks")
+}
+
+model Consent {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  policyVersion String
+  consentedAt   DateTime @default(now())
+
+  @@map("consents")
+}
